@@ -151,7 +151,42 @@ public sealed class PedidoService(AppDbContext db) : IPedidoService
             throw new ImportacaoInvalidaException("A lista de pedidos não pode ser vazia.");
         }
 
-        List<Pedido> pedidos = requests.Select(request => new Pedido
+        List<CriarPedidoRequest> lista = requests.ToList();
+
+        for (int posicao = 0; posicao < lista.Count; posicao++)
+        {
+            CriarPedidoRequest request = lista[posicao];
+
+            if (string.IsNullOrWhiteSpace(request.Cliente))
+            {
+                throw new PedidoInvalidoException(posicao, "cliente não informado.");
+            }
+
+            if (request.Itens.Count == 0)
+            {
+                throw new PedidoInvalidoException(posicao, "pedido sem itens.");
+            }
+
+            foreach (CriarItemPedidoRequest item in request.Itens)
+            {
+                if (string.IsNullOrWhiteSpace(item.Produto))
+                {
+                    throw new PedidoInvalidoException(posicao, "item sem produto.");
+                }
+
+                if (item.Quantidade <= 0)
+                {
+                    throw new PedidoInvalidoException(posicao, "quantidade inválida.");
+                }
+
+                if (item.ValorUnitario <= 0)
+                {
+                    throw new PedidoInvalidoException(posicao, "valor unitário inválido.");
+                }
+            }
+        }
+
+        List<Pedido> pedidos = lista.Select(request => new Pedido
         {
             Cliente = request.Cliente.Trim(),
             Itens = request.Itens.Select(item => new ItemPedido
@@ -162,8 +197,12 @@ public sealed class PedidoService(AppDbContext db) : IPedidoService
             }).ToList()
         }).ToList();
 
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
         await db.Pedidos.AddRangeAsync(pedidos, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
 
         return new ImportarPedidosResponse
         {

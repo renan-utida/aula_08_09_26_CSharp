@@ -96,6 +96,10 @@ public sealed class PedidosController(IPedidoService service) : ControllerBase
         {
             return BadRequest(excecao.Message);
         }
+        catch (PedidoInvalidoException excecao)
+        {
+            return BadRequest(excecao.Message);
+        }
     }
 
     [HttpGet("resumo")]
