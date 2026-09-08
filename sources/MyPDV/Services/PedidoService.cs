@@ -172,6 +172,24 @@ public sealed class PedidoService(AppDbContext db) : IPedidoService
         };
     }
 
+    public async Task<IReadOnlyCollection<ResumoPedidoResponse>> ObterResumoAsync(
+        CancellationToken cancellationToken)
+    {
+        List<ResumoPedidoResponse> resumo = await db.Pedidos
+            .Where(pedido => pedido.Ativo)
+            .GroupBy(pedido => pedido.Status)
+            .Select(grupo => new ResumoPedidoResponse
+            {
+                Status = grupo.Key,
+                Quantidade = grupo.Count(),
+                ValorTotal = grupo.Sum(pedido => pedido.Total)
+            })
+            .OrderBy(item => item.Status)
+            .ToListAsync(cancellationToken);
+
+        return resumo;
+    }
+
     private static PedidoResponse Mapear(Pedido pedido)
     {
         return new PedidoResponse

@@ -31,4 +31,7 @@ public interface IPedidoService
     Task<ImportarPedidosResponse> ImportarAsync(
         IReadOnlyCollection<CriarPedidoRequest> requests,
         CancellationToken cancellationToken);
+
+    Task<IReadOnlyCollection<ResumoPedidoResponse>> ObterResumoAsync(
+        CancellationToken cancellationToken);
 }

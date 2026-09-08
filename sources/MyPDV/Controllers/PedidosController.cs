@@ -99,8 +99,9 @@ public sealed class PedidosController(IPedidoService service) : ControllerBase
     }
 
     [HttpGet("resumo")]
-    public ActionResult ObterResumo()
+    public async Task<ActionResult<IReadOnlyCollection<ResumoPedidoResponse>>> ObterResumo(
+        CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        return Ok(await service.ObterResumoAsync(cancellationToken));
     }
 }
