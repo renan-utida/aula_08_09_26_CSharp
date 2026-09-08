@@ -142,6 +142,36 @@ public sealed class PedidoService(AppDbContext db) : IPedidoService
         return Mapear(pedido);
     }
 
+    public async Task<ImportarPedidosResponse> ImportarAsync(
+        IReadOnlyCollection<CriarPedidoRequest> requests,
+        CancellationToken cancellationToken)
+    {
+        if (requests.Count == 0)
+        {
+            throw new ImportacaoInvalidaException("A lista de pedidos não pode ser vazia.");
+        }
+
+        List<Pedido> pedidos = requests.Select(request => new Pedido
+        {
+            Cliente = request.Cliente.Trim(),
+            Itens = request.Itens.Select(item => new ItemPedido
+            {
+                Produto = item.Produto.Trim(),
+                Quantidade = item.Quantidade,
+                ValorUnitario = item.ValorUnitario
+            }).ToList()
+        }).ToList();
+
+        await db.Pedidos.AddRangeAsync(pedidos, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+
+        return new ImportarPedidosResponse
+        {
+            Quantidade = pedidos.Count,
+            Ids = pedidos.Select(pedido => pedido.Id).ToList()
+        };
+    }
+
     private static PedidoResponse Mapear(Pedido pedido)
     {
         return new PedidoResponse

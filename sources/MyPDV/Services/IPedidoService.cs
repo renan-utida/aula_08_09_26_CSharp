@@ -27,4 +27,8 @@ public interface IPedidoService
     Task<PedidoResponse?> FecharAsync(
         int id,
         CancellationToken cancellationToken);
+
+    Task<ImportarPedidosResponse> ImportarAsync(
+        IReadOnlyCollection<CriarPedidoRequest> requests,
+        CancellationToken cancellationToken);
 }

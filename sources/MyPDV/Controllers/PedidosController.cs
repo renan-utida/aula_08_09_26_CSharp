@@ -83,9 +83,19 @@ public sealed class PedidosController(IPedidoService service) : ControllerBase
     }
 
     [HttpPost("importacao")]
-    public ActionResult Importar(IReadOnlyCollection<CriarPedidoRequest> requests)
+    public async Task<ActionResult<ImportarPedidosResponse>> Importar(
+        IReadOnlyCollection<CriarPedidoRequest> requests,
+        CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        try
+        {
+            ImportarPedidosResponse resultado = await service.ImportarAsync(requests, cancellationToken);
+            return Ok(resultado);
+        }
+        catch (ImportacaoInvalidaException excecao)
+        {
+            return BadRequest(excecao.Message);
+        }
     }
 
     [HttpGet("resumo")]
