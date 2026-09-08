@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using MyPDV.Database;
 using MyPDV.Dtos;
 using MyPDV.Schemas.Entities;
+using MyPDV.Schemas.Enums;
 
 namespace MyPDV.Services;
 
@@ -50,6 +51,37 @@ public sealed class PedidoService(AppDbContext db) : IPedidoService
         };
 
         db.Pedidos.Add(pedido);
+        await db.SaveChangesAsync(cancellationToken);
+
+        return Mapear(pedido);
+    }
+
+    public async Task<PedidoResponse?> AtualizarAsync(
+        int id,
+        AtualizarPedidoRequest request,
+        CancellationToken cancellationToken)
+    {
+        Pedido? pedido = await db.Pedidos
+            .Include(pedido => pedido.Itens)
+            .FirstOrDefaultAsync(
+                pedido => pedido.Id == id && pedido.Ativo,
+                cancellationToken);
+
+        if (pedido is null)
+        {
+            return null;
+        }
+
+        if (pedido.Status == Status.Fechado)
+        {
+            throw new PedidoFechadoException(id);
+        }
+
+        if (request.Cliente is not null)
+        {
+            pedido.Cliente = request.Cliente.Trim();
+        }
+
         await db.SaveChangesAsync(cancellationToken);
 
         return Mapear(pedido);

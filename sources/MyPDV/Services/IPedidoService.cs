@@ -14,4 +14,9 @@ public interface IPedidoService
     Task<PedidoResponse> CriarAsync(
         CriarPedidoRequest request,
         CancellationToken cancellationToken);
+
+    Task<PedidoResponse?> AtualizarAsync(
+        int id,
+        AtualizarPedidoRequest request,
+        CancellationToken cancellationToken);
 }

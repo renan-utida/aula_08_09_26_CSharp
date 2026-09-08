@@ -37,11 +37,20 @@ public sealed class PedidosController(IPedidoService service) : ControllerBase
     }
 
     [HttpPatch("{id:int}")]
-    public ActionResult<PedidoResponse> Atualizar(
+    public async Task<ActionResult<PedidoResponse>> Atualizar(
         int id,
-        AtualizarPedidoRequest request)
+        AtualizarPedidoRequest request,
+        CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        try
+        {
+            PedidoResponse? pedido = await service.AtualizarAsync(id, request, cancellationToken);
+            return pedido is null ? NotFound() : Ok(pedido);
+        }
+        catch (PedidoFechadoException)
+        {
+            return Conflict();
+        }
     }
 
     [HttpDelete("{id:int}")]
