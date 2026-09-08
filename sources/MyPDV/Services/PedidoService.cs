@@ -107,6 +107,41 @@ public sealed class PedidoService(AppDbContext db) : IPedidoService
         return true;
     }
 
+    public async Task<PedidoResponse?> FecharAsync(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        Pedido? pedido = await db.Pedidos
+            .Include(pedido => pedido.Itens)
+            .FirstOrDefaultAsync(
+                pedido => pedido.Id == id && pedido.Ativo,
+                cancellationToken);
+
+        if (pedido is null)
+        {
+            return null;
+        }
+
+        if (pedido.Itens.Count == 0)
+        {
+            throw new PedidoSemItensException(id);
+        }
+
+        if (pedido.Status == Status.Fechado)
+        {
+            throw new PedidoFechadoException(id);
+        }
+
+        pedido.Total = pedido.Itens.Sum(
+            item => item.Quantidade * item.ValorUnitario);
+
+        pedido.Status = Status.Fechado;
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        return Mapear(pedido);
+    }
+
     private static PedidoResponse Mapear(Pedido pedido)
     {
         return new PedidoResponse

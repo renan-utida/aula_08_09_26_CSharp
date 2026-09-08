@@ -23,4 +23,8 @@ public interface IPedidoService
     Task<bool> DesativarAsync(
         int id,
         CancellationToken cancellationToken);
+
+    Task<PedidoResponse?> FecharAsync(
+        int id,
+        CancellationToken cancellationToken);
 }

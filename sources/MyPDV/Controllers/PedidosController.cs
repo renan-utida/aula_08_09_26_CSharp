@@ -63,9 +63,23 @@ public sealed class PedidosController(IPedidoService service) : ControllerBase
     }
 
     [HttpPost("{id:int}/fechar")]
-    public ActionResult<PedidoResponse> Fechar(int id)
+    public async Task<ActionResult<PedidoResponse>> Fechar(
+        int id,
+        CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        try
+        {
+            PedidoResponse? pedido = await service.FecharAsync(id, cancellationToken);
+            return pedido is null ? NotFound() : Ok(pedido);
+        }
+        catch (PedidoFechadoException)
+        {
+            return Conflict();
+        }
+        catch (PedidoSemItensException)
+        {
+            return BadRequest();
+        }
     }
 
     [HttpPost("importacao")]
