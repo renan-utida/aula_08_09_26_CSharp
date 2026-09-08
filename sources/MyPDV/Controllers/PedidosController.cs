@@ -54,9 +54,12 @@ public sealed class PedidosController(IPedidoService service) : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    public IActionResult Desativar(int id)
+    public async Task<IActionResult> Desativar(
+        int id,
+        CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        bool desativado = await service.DesativarAsync(id, cancellationToken);
+        return desativado ? NoContent() : NotFound();
     }
 
     [HttpPost("{id:int}/fechar")]

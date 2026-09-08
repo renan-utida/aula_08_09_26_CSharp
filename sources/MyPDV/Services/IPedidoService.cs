@@ -19,4 +19,8 @@ public interface IPedidoService
         int id,
         AtualizarPedidoRequest request,
         CancellationToken cancellationToken);
+
+    Task<bool> DesativarAsync(
+        int id,
+        CancellationToken cancellationToken);
 }

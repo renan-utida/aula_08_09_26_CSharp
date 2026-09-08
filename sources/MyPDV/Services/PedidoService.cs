@@ -87,6 +87,26 @@ public sealed class PedidoService(AppDbContext db) : IPedidoService
         return Mapear(pedido);
     }
 
+    public async Task<bool> DesativarAsync(
+        int id,
+        CancellationToken cancellationToken)
+    {
+        Pedido? pedido = await db.Pedidos
+            .FirstOrDefaultAsync(
+                pedido => pedido.Id == id && pedido.Ativo,
+                cancellationToken);
+
+        if (pedido is null)
+        {
+            return false;
+        }
+
+        pedido.Ativo = false;
+        await db.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+
     private static PedidoResponse Mapear(Pedido pedido)
     {
         return new PedidoResponse
